@@ -4,8 +4,6 @@ services:
   fastapi:
     build: .
     container_name: fastapi_app
-    environment:
-      - PYTHONPATH=/app
     env_file:
       - .env
     volumes:
@@ -15,6 +13,12 @@ services:
     depends_on:
       - elasticsearch
       - redis
+    command: >
+      sh -c "
+        /wait-for-it.sh elasticsearch:9200 --timeout=30 --strict -- 
+        /wait-for-it.sh redis:6379 --timeout=30 --strict -- 
+        uvicorn main:app --host 0.0.0.0 --port 8000
+      "
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
@@ -27,6 +31,11 @@ services:
       - "9200:9200"
     volumes:
       - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7

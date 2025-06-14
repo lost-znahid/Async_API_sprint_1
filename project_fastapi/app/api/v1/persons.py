@@ -18,12 +18,13 @@ async def get_persons(page_number: int = 1, page_size: int = 10, sort: str = "fu
     sort_order = "desc" if sort.startswith("-") else "asc"
 
     body = {
+        "query": {"match_all": {}},
         "sort": [{sort_field: {"order": sort_order}}],
         "from": (page_number - 1) * page_size,
         "size": page_size
     }
 
-    es_response = await search(INDEX_NAME, query={"match_all": {}}, from_=(page_number - 1) * page_size, size=page_size)
+    es_response = await search(INDEX_NAME, query=body)
     hits = es_response["hits"]["hits"]
     result = [hit["_source"] for hit in hits]
 

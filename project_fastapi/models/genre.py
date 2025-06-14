@@ -5,4 +5,4 @@ from uuid import UUID
 class Genre(BaseModel):
     uuid: UUID
     name: str
-    description: Optional[str]
+    description: Optional[str] = None
