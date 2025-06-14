@@ -20,15 +20,16 @@ async def create_index():
         )
 
 async def index_genres(genres):
-    actions = [
-        {
+    actions = []
+    for g in genres:
+        actions.append({
+            "_op_type": "index",
             "_index": INDEX_NAME,
             "_id": str(g["uuid"]),
             "_source": g
-        } for g in genres
-    ]
-    for action in actions:
-        await es.index(index=action["_index"], id=action["_id"], document=action["_source"])
+        })
+    response = await es.bulk(body=actions)
+    return response
 
 async def etl_genres(all_films):
     await create_index()
@@ -38,4 +39,6 @@ async def etl_genres(all_films):
         for genre in film.get("genres", []):
             genre_map[genre["uuid"]] = genre
 
-    await index_genres(list(genre_map.values()))
+    genres = list(genre_map.values())
+    if genres:
+        await index_genres(genres)

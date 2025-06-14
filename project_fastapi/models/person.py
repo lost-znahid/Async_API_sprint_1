@@ -5,4 +5,4 @@ from uuid import UUID
 class Person(BaseModel):
     uuid: UUID
     full_name: str
-    roles: Optional[List[str]] = []
+    roles: Optional[List[str]] = None

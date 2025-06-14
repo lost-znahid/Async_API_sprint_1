@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from uuid import UUID
 from models.genre import Genre
@@ -9,7 +9,7 @@ class Film(BaseModel):
     title: str
     description: Optional[str]
     imdb_rating: Optional[float]
-    genres: Optional[List[Genre]] = []
-    actors: Optional[List[Person]] = []
-    writers: Optional[List[Person]] = []
-    directors: Optional[List[Person]] = []
+    genres: Optional[List[Genre]] = Field(default_factory=list)
+    actors: Optional[List[Person]] = Field(default_factory=list)
+    writers: Optional[List[Person]] = Field(default_factory=list)
+    directors: Optional[List[Person]] = Field(default_factory=list)

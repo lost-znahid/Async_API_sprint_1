@@ -17,7 +17,14 @@ async def get_films(page_number: int = 1, page_size: int = 10, sort: str = "titl
     sort_field = sort.lstrip("-")
     sort_order = "desc" if sort.startswith("-") else "asc"
 
-    es_response = await search(INDEX_NAME, query={"match_all": {}}, from_=(page_number - 1) * page_size, size=page_size)
+    body = {
+        "query": {"match_all": {}},
+        "from": (page_number - 1) * page_size,
+        "size": page_size,
+        "sort": [{sort_field: {"order": sort_order}}]
+    }
+    es_response = await search(INDEX_NAME, query=body)
+
     hits = es_response["hits"]["hits"]
     result = [hit["_source"] for hit in hits]
 
@@ -36,6 +43,7 @@ async def get_film(film_id: str):
         "size": 1
     }
     es_response = await search(INDEX_NAME, query=body)
+
     hits = es_response["hits"]["hits"]
     if not hits:
         raise HTTPException(status_code=404, detail="Film not found")
