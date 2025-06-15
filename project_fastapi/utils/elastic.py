@@ -1,17 +1,16 @@
 from elasticsearch import AsyncElasticsearch
-import os
+from core.config import settings
+import logging
 
-ELASTIC_HOST = os.getenv("ELASTIC_HOST", "localhost")
-ELASTIC_PORT = int(os.getenv("ELASTIC_PORT", 9200))
+logger = logging.getLogger(__name__)
 
-es = AsyncElasticsearch(hosts=[f"http://{ELASTIC_HOST}:{ELASTIC_PORT}"])
+es = AsyncElasticsearch(hosts=[settings.elastic_url])
+
 
 async def search(index: str, query: dict, from_: int = 0, size: int = 10):
-    body = {
-        "query": {
-            "match_all": {}
-        }
-    }
-
-    response = await es.search(index=index, body=body, from_=from_, size=size)
-    return response
+    try:
+        response = await es.search(index=index, body=query, from_=from_, size=size)
+        return response
+    except Exception as e:
+        logger.error(f"Elasticsearch search error: {e}")
+        return {}

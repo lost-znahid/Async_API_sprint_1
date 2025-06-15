@@ -1,4 +1,7 @@
+import logging
 from utils.elastic import es
+
+logger = logging.getLogger(__name__)
 
 INDEX_NAME = "persons"
 
@@ -9,31 +12,41 @@ ROLE_MAP = {
 }
 
 async def create_index():
-    exists = await es.indices.exists(index=INDEX_NAME)
-    if not exists:
-        await es.indices.create(
-            index=INDEX_NAME,
-            body={
-                "mappings": {
-                    "properties": {
-                        "uuid": {"type": "keyword"},
-                        "full_name": {"type": "text"},
-                        "roles": {"type": "keyword"},
+    try:
+        exists = await es.indices.exists(index=INDEX_NAME)
+        if not exists:
+            await es.indices.create(
+                index=INDEX_NAME,
+                body={
+                    "mappings": {
+                        "properties": {
+                            "uuid": {"type": "keyword"},
+                            "full_name": {"type": "text"},
+                            "roles": {"type": "keyword"},
+                        }
                     }
                 }
-            }
-        )
+            )
+            logger.info(f"Created index {INDEX_NAME}")
+    except Exception as e:
+        logger.error(f"Error creating index {INDEX_NAME}: {e}")
 
 async def index_persons(persons):
-    actions = []
-    for person in persons:
-        actions.append({
+    actions = [
+        {
             "_op_type": "index",
             "_index": INDEX_NAME,
             "_id": str(person["uuid"]),
             "_source": person
-        })
-    await es.bulk(body=actions)
+        }
+        for person in persons
+    ]
+    try:
+        response = await es.bulk(operations=actions)
+        logger.info(f"Indexed {len(persons)} persons")
+        return response
+    except Exception as e:
+        logger.error(f"Error bulk indexing persons: {e}")
 
 async def etl_persons(all_films):
     await create_index()
@@ -54,4 +67,5 @@ async def etl_persons(all_films):
                 if role not in person_map[uuid]["roles"]:
                     person_map[uuid]["roles"].append(role)
 
-    await index_persons(list(person_map.values()))
+    if person_map:
+        await index_persons(list(person_map.values()))
