@@ -1,7 +1,7 @@
 import logging
 from core.config import settings
 from elasticsearch.helpers import async_bulk
-from project_fastapi.models.film import Film
+from models.film import Film
 from typing import List, Optional
 from utils.elastic import es, search
 from utils.cache import get_cache, set_cache
