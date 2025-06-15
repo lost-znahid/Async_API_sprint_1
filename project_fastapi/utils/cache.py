@@ -1,28 +1,28 @@
 from redis.asyncio import from_url
 from redis.exceptions import RedisError
-import os
+from core.config import settings
 import json
+import logging
 
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+logger = logging.getLogger(__name__)
 
-redis = from_url(f"redis://{REDIS_HOST}:{REDIS_PORT}", encoding="utf-8", decode_responses=True)
+# Создание клиента Redis через URL из настроек
+redis = from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
+
 
 async def get_cache(key: str):
     try:
         data = await redis.get(key)
         if data:
             return json.loads(data)
-    except RedisError:
-        # Логирование ошибки, например
-        pass
+    except RedisError as e:
+        logger.error(f"Redis error during get: {e}")
     return None
+
 
 async def set_cache(key: str, value, expire: int = 60):
     try:
         data = json.dumps(value)
         await redis.set(key, data, ex=expire)
-    except RedisError:
-        # Логирование ошибки, например
-        pass
-
+    except RedisError as e:
+        logger.error(f"Redis error during set: {e}")
