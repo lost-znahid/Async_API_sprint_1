@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Создание клиента Redis через URL из настроек
-redis = from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
+redis = from_url(settings.redis_url, encoding="utf-8", decode_responses=True)
 
 
 async def get_cache(key: str):
